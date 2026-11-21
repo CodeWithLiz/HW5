@@ -68,32 +68,19 @@ def send(sock: socket.socket, data: bytes):
                 sock.settimeout(reamaining_time)  # Set the socket timeout to the remaining time
              
                 ack = sock.recv(4)  
-              #  ack_time = time.monotonic()
-
-                #if ack is different from the sequence number we sent, we will resend the packet
-               # if ack != seqence_number:
-                  #  continue
-                # if they are they same 
-              #  elif ack == seqence_number:
-                    # this checks if the packet was retransmitted or not, if it was not retransmitted we will log the rtt
-                    
-                  #  break  # Exit the loop if the correct ACK is received       
+              
 
             # if we dont receive ack and resending them  
             except socket.timeout:
                 continue
-              #  logger.warning("Timeout waiting for ACK, resending packet")
-             #   reTransmited = True  # Mark that the packet was retransmitted
-              #  sock.send(pack)  # Resend the packet
-              #  deadline = time.monotonic() + timeout  # Reset the deadline
+             
         if not reTransmited:
-                                sample_rtt = time.monotonic() - send_time
-                                dev_rtt = 0.25 * abs(sample_rtt - estimated_rtt) + 0.75 * dev_rtt  # Calculate deviation of RTT
-                                estimated_rtt = (1 - alpha) * estimated_rtt + alpha * sample_rtt
-                                 
-                                logger.info("Received ACK for packet %d, RTT: %.4f seconds", index, sample_rtt)
+            sample_rtt = time.monotonic() - send_time
+            dev_rtt = 0.25 * abs(sample_rtt - estimated_rtt) + 0.75 * dev_rtt  # Calculate deviation of RTT
+            estimated_rtt = (1 - alpha) * estimated_rtt + alpha * sample_rtt 
+            logger.info("Received ACK for packet %d, RTT: %.4f seconds", index, sample_rtt)
 
-    # Create the special FIN packet
+    # Create the special fin packet
     fin_number = 0xFFFFFFFF
     fin_packet = struct.pack('!I', fin_number)
     sock.send(fin_packet)
@@ -102,7 +89,6 @@ def send(sock: socket.socket, data: bytes):
     fin_deadline = time.monotonic() + timeout
     # Wait for fin_ack
     fin_ack = b''
-
     while fin_ack != fin_packet:
 
         # Calculate the remaining waiting time
@@ -120,13 +106,8 @@ def send(sock: socket.socket, data: bytes):
             # Receive fin_ack
             fin_ack = sock.recv(4)
 
-            # Correct fin_ack received
-            #if fin_ack == fin_packet:
-               # break
-
         except socket.timeout:
             logger.warning("Timeout waiting for FIN-ACK")
-
             # Retransmit fin
             sock.send(fin_packet)
 

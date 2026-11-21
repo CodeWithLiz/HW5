@@ -58,37 +58,40 @@ def send(sock: socket.socket, data: bytes):
        
         while ack != seqence_number:  # wait for ack 
             reamaining_time = deadline - time.monotonic()  # Calculate remaining time for timeout
-            try:
-                if reamaining_time <= 0:
+          #  try:
+            if reamaining_time <= 0:
                     reTransmited = True  # Mark that the packet was retransmitted
                     deadline = time.monotonic() + timeout  # Reset the deadline for receiving ACK
                     sock.send(pack)  # Resend the packet if the deadline has expired
-                    continue 
+                    continue
+            try:
                 sock.settimeout(reamaining_time)  # Set the socket timeout to the remaining time
              
                 ack = sock.recv(4)  
-                ack_time = time.monotonic()
+              #  ack_time = time.monotonic()
 
                 #if ack is different from the sequence number we sent, we will resend the packet
-                if ack != seqence_number:
-                    continue
+               # if ack != seqence_number:
+                  #  continue
                 # if they are they same 
-                elif ack == seqence_number:
+              #  elif ack == seqence_number:
                     # this checks if the packet was retransmitted or not, if it was not retransmitted we will log the rtt
-                    if not reTransmited:
-                        sample_rtt = ack_time - send_time
-                        dev_rtt = 0.25 * abs(sample_rtt - estimated_rtt) + 0.75 * dev_rtt  # Calculate deviation of RTT
-                        estimated_rtt = (1 - alpha) * estimated_rtt + alpha * sample_rtt
-                         
-                        logger.info("Received ACK for packet %d, RTT: %.4f seconds", index, sample_rtt)
-                    break  # Exit the loop if the correct ACK is received       
+                    
+                  #  break  # Exit the loop if the correct ACK is received       
 
             # if we dont receive ack and resending them  
             except socket.timeout:
-                logger.warning("Timeout waiting for ACK, resending packet")
-                reTransmited = True  # Mark that the packet was retransmitted
-                sock.send(pack)  # Resend the packet
-                deadline = time.monotonic() + timeout  # Reset the deadline
+                continue
+              #  logger.warning("Timeout waiting for ACK, resending packet")
+             #   reTransmited = True  # Mark that the packet was retransmitted
+              #  sock.send(pack)  # Resend the packet
+              #  deadline = time.monotonic() + timeout  # Reset the deadline
+        if not reTransmited:
+                                sample_rtt = time.monotonic() - send_time
+                                dev_rtt = 0.25 * abs(sample_rtt - estimated_rtt) + 0.75 * dev_rtt  # Calculate deviation of RTT
+                                estimated_rtt = (1 - alpha) * estimated_rtt + alpha * sample_rtt
+                                 
+                                logger.info("Received ACK for packet %d, RTT: %.4f seconds", index, sample_rtt)
 
     # Create the special FIN packet
     fin_number = 0xFFFFFFFF
